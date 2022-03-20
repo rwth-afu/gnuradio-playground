@@ -21,7 +21,7 @@ options:
     run_options: prompt
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: Not titled yet
+    title: APRS demodulation
     window_size: ''
   states:
     bus_sink: false
@@ -32,6 +32,18 @@ options:
     state: enabled
 
 blocks:
+- name: baud_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '1200'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [288, 12.0]
+    rotation: 0
+    state: enabled
 - name: samp_rate
   id: variable
   parameters:
@@ -44,23 +56,6 @@ blocks:
     coordinate: [192, 12.0]
     rotation: 0
     state: enabled
-- name: samp_rate_paused
-  id: variable_qtgui_push_button
-  parameters:
-    comment: ''
-    gui_hint: 3,0,1,1
-    label: pause
-    pressed: samp_rate
-    released: '0'
-    type: int
-    value: samp_rate
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [312, 12.0]
-    rotation: 0
-    state: true
 - name: analog_nbfm_rx_0
   id: analog_nbfm_rx
   parameters:
@@ -77,7 +72,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [528, 364.0]
+    coordinate: [448, 292.0]
     rotation: 0
     state: true
 - name: band_pass_filter_0
@@ -139,6 +134,23 @@ blocks:
     coordinate: [712, 920.0]
     rotation: 0
     state: true
+- name: blocks_char_to_float_0
+  id: blocks_char_to_float
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    scale: '1'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [568, 1132.0]
+    rotation: 0
+    state: enabled
 - name: blocks_file_sink_0
   id: blocks_file_sink
   parameters:
@@ -154,44 +166,26 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1432, 964.0]
+    coordinate: [1432, 1068.0]
     rotation: 0
     state: true
-- name: blocks_file_sink_0_0
+- name: blocks_file_sink_1
   id: blocks_file_sink
   parameters:
     affinity: ''
     alias: ''
     append: 'False'
     comment: ''
-    file: /home/tim/git/rwth-afu-gnuradio-playground/aprs/out/afsk_signal_demod_out_lp.f32
-    type: float
+    file: /home/tim/git/rwth-afu-gnuradio-playground/aprs/out/decoded_bits.i8
+    type: byte
     unbuffered: 'False'
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [936, 1020.0]
-    rotation: 0
-    state: true
-- name: blocks_file_sink_0_0_0
-  id: blocks_file_sink
-  parameters:
-    affinity: ''
-    alias: ''
-    append: 'False'
-    comment: ''
-    file: /home/tim/git/rwth-afu-gnuradio-playground/aprs/out/afsk_signal_demod_out_hp.f32
-    type: float
-    unbuffered: 'False'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [936, 1108.0]
-    rotation: 0
+    coordinate: [296, 1116.0]
+    rotation: 180
     state: true
 - name: blocks_file_source_0
   id: blocks_file_source
@@ -212,7 +206,20 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [96, 172.0]
+    coordinate: [96, 284.0]
+    rotation: 0
+    state: enabled
+- name: blocks_message_debug_0
+  id: blocks_message_debug
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [856, 1320.0]
     rotation: 0
     state: enabled
 - name: blocks_sub_xx_0
@@ -230,7 +237,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [976, 888.0]
+    coordinate: [872, 848.0]
     rotation: 0
     state: true
 - name: blocks_throttle_0
@@ -242,7 +249,7 @@ blocks:
     ignoretag: 'True'
     maxoutbuf: '0'
     minoutbuf: '0'
-    samples_per_second: samp_rate_paused
+    samples_per_second: samp_rate
     type: float
     vlen: '1'
   states:
@@ -260,33 +267,179 @@ blocks:
       \ of your block. The arguments to __init__  will\nbe the parameters. All of\
       \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
       from gnuradio import gr\n\n\nclass blk(gr.sync_block):  # other base classes\
-      \ are basic_block, decim_block, interp_block\n    \"\"\"Embedded Python Block\
-      \ example - a simple multiply const\"\"\"\n\n    def __init__(self, example_param=1.0):\
+      \ are basic_block, decim_block, interp_block\n    \"\"\" outputs 1 if the input\
+      \ is above the threshold, else 0 \"\"\"\n\n    def __init__(self, threshold=0.0):\
       \  # only default arguments here\n        \"\"\"arguments to this function show\
       \ up as parameters in GRC\"\"\"\n        gr.sync_block.__init__(\n         \
-      \   self,\n            name='Embedded Python Block',   # will show up in GRC\n\
-      \            in_sig=[np.complex64],\n            out_sig=[np.complex64]\n  \
-      \      )\n        # if an attribute with the same name as a parameter is found,\n\
-      \        # a callback is registered (properties work, too).\n        self.example_param\
-      \ = example_param\n\n    def work(self, input_items, output_items):\n      \
-      \  \"\"\"example: multiply with constant\"\"\"\n        output_items[0][:] =\
-      \ input_items[0] * self.example_param\n        return len(output_items[0])\n"
+      \   self,\n            name='Compare',   # will show up in GRC\n           \
+      \ in_sig=[np.float32],\n            out_sig=[np.float32]\n        )\n      \
+      \  \n        # keep the input as a value\n        self.threshold = threshold\n\
+      \n    def work(self, input_items, output_items):\n        \"\"\"example: multiply\
+      \ with constant\"\"\"\n        output_items[0][:] = input_items[0] > self.threshold\n\
+      \        return len(output_items[0])\n"
     affinity: ''
     alias: ''
     comment: ''
-    example_param: ''
     maxoutbuf: '0'
     minoutbuf: '0'
+    threshold: '0.0'
   states:
-    _io_cache: ('Embedded Python Block', 'blk', [('example_param', '1.0')], [('0',
-      'complex', 1)], [('0', 'complex', 1)], 'Embedded Python Block example - a simple
-      multiply const', ['example_param'])
+    _io_cache: ('Compare', 'blk', [('threshold', '0.0')], [('0', 'float', 1)], [('0',
+      'float', 1)], ' outputs 1 if the input is above the threshold, else 0 ', ['threshold'])
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1352, 1140.0]
+    coordinate: [1212.0, 1128]
+    rotation: 270
+    state: enabled
+- name: epy_block_1
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass blk(gr.basic_block):  # other base classes\
+      \ are basic_block, decim_block, interp_block\n    \"\"\" Extracts the bitstream\
+      \ from an NRZI binary stream (In a not very efficient way) \"\"\"\n\n    def\
+      \ __init__(self, sample_rate=50e3, data_rate=1200):  # only default arguments\
+      \ here\n        \"\"\"arguments to this function show up as parameters in GRC\"\
+      \"\"\n        # save parameter\n        self.symbol_duration = sample_rate /\
+      \ data_rate\n        print('symbol_duration', self.symbol_duration)\n      \
+      \  \n        # initialize parent\n        gr.basic_block.__init__(\n       \
+      \     self,\n            name='NRZI decoder',   # will show up in GRC\n    \
+      \        in_sig=[np.float32],\n            out_sig=[np.int8],\n        )\n \
+      \       \n        # create class variabels\n        self.leftover_last_work\
+      \ = 0.0\n        self.last_value = 0\n        self.first_work = True\n     \
+      \   \n        self.dump = open('/tmp/raw_dump.txt', 'w')\n        \n    '''\n\
+      \    def join_glitches(self, arr):\n        \"\"\" a generator that removes\
+      \ glitches that are less than the symbol duration from the interval list \"\"\
+      \"\n        idx = 0\n        while idx < len(arr):\n            cnt = 1\n  \
+      \          while idx+cnt < len(arr)-2 and sum(arr[idx:idx+cnt+2]) < self.symbol_duration*0.8:\n\
+      \                cnt += 2\n            \n            yield sum(arr[idx:idx+cnt])\n\
+      \            idx += cnt\n    '''\n\n    def general_work(self, input_items,\
+      \ output_items):\n        \"\"\" measure the distance between the edges and\
+      \ calculate an estimate for the bistream based on that \"\"\"\n        # use\
+      \ all available input data\n        self.consume(0, len(input_items[0]))\n \
+      \       \n        # print('in/out len', len(input_items[0]), len(output_items[0]))\n\
+      \        samples = input_items[0]\n        \n        # find the edges\n    \
+      \    changes = np.array(np.nonzero(samples[1:] - samples[:-1])[0])\n\n     \
+      \   # print(len(samples), (len(samples)-1-changes[-1]) if len(changes)>0 else\
+      \ None, samples[0], self.last_value, self.leftover_last_work, changes[0])\n\
+      \                \n        # estimate the bit-stream\n        change_interval\
+      \ = list(changes[1:] - changes[:-1])\n        \n        # handle leftover data\
+      \ from last time\n        if not self.first_work:\n            if len(changes)\
+      \ > 0:\n                if samples[0] != self.last_value:\n                \
+      \    change_interval = [self.leftover_last_work, changes[0]] + change_interval\n\
+      \                else: # there was no edge between the last and current block\n\
+      \                    # change_interval[0] += self.leftover_last_work\n     \
+      \               change_interval = [self.leftover_last_work + changes[0]] + change_interval\n\
+      \            else:\n                self.leftover_last_work += len(samples)\n\
+      \                return 0\n        else:\n            self.first_work = False\n\
+      \n        # change_interval = self.join_glitches(change_interval) # optional\
+      \ de-glitching\n        \n        bits = [[1]*int(np.round(interval/self.symbol_duration)-1)\
+      \ + [0] for interval in change_interval]\n        bits = sum(bits, [])\n   \
+      \     \n        # dump bits for debugging\n        for i in bits:\n        \
+      \     self.dump.write(f\"{i}\\n\")\n        #self.dump.write(f\"l {self.last_value}\
+      \ {self.leftover_last_work}\\n\")\n        #self.dump.write(f\"c {repr(changes)}\\\
+      n\")\n        #self.dump.write(f\"i {repr(change_interval)}\\n\")\n        #self.dump.write(f\"\
+      b {repr(bits)}\\n\\n\")\n        \n        # save ending details for next iteration\n\
+      \        self.last_value = samples[-1]\n        if len(bits) > 0:\n        \
+      \    self.leftover_last_work = len(samples)-1 - changes[-1]\n        else:\n\
+      \            self.leftover_last_work += len(samples)\n        # print(len(bits))\n\
+      \        \n        # return results\n        output_items[0][:len(bits)] = bits\n\
+      \        return len(bits)\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    data_rate: '1200'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    sample_rate: '50000'
+  states:
+    _io_cache: ('NRZI decoder', 'blk', [('sample_rate', '50000.0'), ('data_rate',
+      '1200')], [('0', 'float', 1)], [('0', 'byte', 1)], ' Extracts the bitstream
+      from an NRZI binary stream (In a not very efficient way) ', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [632, 1236.0]
+    rotation: 180
+    state: enabled
+- name: epy_block_2
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass blk(gr.basic_block):  # other base classes\
+      \ are basic_block, decim_block, interp_block\n    \"\"\"Embedded Python Block\
+      \ example - a simple multiply const\"\"\"\n\n    def __init__(self, ):  # only\
+      \ default arguments here\n        \"\"\"arguments to this function show up as\
+      \ parameters in GRC\"\"\"\n        gr.basic_block.__init__(\n            self,\n\
+      \            name='sync to APRS frames',   # will show up in GRC\n         \
+      \   in_sig=[np.int8],\n            out_sig=None\n        )\n        \n     \
+      \   self.message_port_register_out(gr.pmt.intern('aprs_msg'))\n\n        \n\
+      \        self.started_data = []\n        # self.is_synced = False\n        self.leftover_bits\
+      \ = []\n\n    def bitstream_to_bytes_big_endian(self, bitstream):\n        \"\
+      \"\" convert a bitstream to bytes \"\"\"\n        assert len(bitstream)%8 ==\
+      \ 0\n        data = np.reshape(bitstream, (len(bitstream)//8, 8)) \n       \
+      \ data = np.sum(data * np.array([2**(i) for i in range(8)]), axis=1)\n     \
+      \   return data\n\n    def parse_packet(self, data):\n        \"\"\" parse the\
+      \ APRS packet components \"\"\"\n        data = np.array(data)\n        \n \
+      \       # determine the digipeater path field lenght (I'm absolutely not sure\
+      \ that this is the intended way!)\n        control_field_idx = None\n      \
+      \  for idx in range(14,len(data)-1):\n            if (data[idx:idx+2] == [0x03,\
+      \ 0xf0]).all():\n                control_field_idx = idx \n                break\n\
+      \        if control_field_idx is None:\n            return None\n\n        #\
+      \ parse package\n        package = {}\n        package['dst_addr'] = bytes(list(data[:7]>>1))\n\
+      \        package['src_addr'] = bytes(list(data[7:14]>>1))\n        package['digipeater_addr']\
+      \ = bytes(list(data[14:control_field_idx]>>1))\n        package['data'] = bytes(list(data[control_field_idx+2:-1]))\n\
+      \        package['fcs'] = data[-1]\n\n        return package \n\n\n    def general_work(self,\
+      \ input_items, output_items):\n        \"\"\"\n            search for sync sqeuence\
+      \ and read until next sync is found (skipping all empty syncs)\n           \
+      \ Also handles the stuffed ones (A zero is inserted after 5 continuous ones\
+      \ unless inside the sync pattern)\n        \"\"\"\n        # tell gnuradio we\
+      \ took the sequence\n        self.consume(0, len(input_items[0]))\n        \n\
+      \        # add last 7 bits to the front of our bitstream in case we did not\
+      \ end with a sync from last frame\n        bitstream = self.leftover_bits +\
+      \ list(input_items[0])\n        \n        # extract the frames based on the\
+      \ sync pattern\n        idx = 0\n        acc = []\n        frames = []\n   \
+      \     stuffing_count_ones = 0\n        \n        while idx < len(bitstream)-8:\n\
+      \            # check for sync\n            if bitstream[idx:idx+8] == [0, 1,\
+      \ 1, 1, 1, 1, 1, 0]:\n                if len(acc) > 0:\n                   \
+      \ frames.append(acc)\n                    acc = []\n                    stuffing_count_ones\
+      \ = 0\n                idx += 8\n            # no sync -> record frame and handle\
+      \ bit stuffing\n            else:\n                if bitstream[idx]:\n    \
+      \                stuffing_count_ones += 1\n                    acc.append(bitstream[idx])\n\
+      \                else:\n                    if stuffing_count_ones < 5: # handle\
+      \ bit stuffing\n                        acc.append(bitstream[idx])\n       \
+      \             else:\n                        # print('skipping stuffed one')\n\
+      \                        pass\n                    stuffing_count_ones = 0\n\
+      \                idx += 1\n        \n        if len(frames) > 0:\n         \
+      \   frames[0] = self.started_data + frames[0]\n            self.started_data\
+      \ = []\n        \n        for f in frames:\n            # send a message if\
+      \ we have a valid frame\n            if len(f)%8 == 0:\n                   \
+      \ bytes = self.bitstream_to_bytes_big_endian(f)\n                    aprs_msg\
+      \ = self.parse_packet(bytes)\n                    self.message_port_pub(gr.pmt.intern('aprs_msg'),\
+      \ gr.pmt.intern(repr(aprs_msg)))\n                    # print('found frame',\
+      \ str(aprs_msg))\n        \n        # store leftover bits\n        self.leftover_bits\
+      \ = bitstream[idx:]\n        self.started_data += acc\n\n        return 0\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('sync to APRS frames', 'blk', [], [('0', 'byte', 1)], [('aprs_msg',
+      'message', 1)], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [520, 1360.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: high_pass_filter_0
   id: high_pass_filter
   parameters:
@@ -356,7 +509,29 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1152, 852.0]
+    coordinate: [1024, 980.0]
+    rotation: 0
+    state: true
+- name: qtgui_edit_box_msg_0
+  id: qtgui_edit_box_msg
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    gui_hint: ''
+    is_pair: 'False'
+    is_static: 'True'
+    key: aprs_msg
+    label: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: string
+    value: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [856, 1436.0]
     rotation: 0
     state: true
 - name: qtgui_freq_sink_x_0
@@ -436,7 +611,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [832, 448.0]
+    coordinate: [832, 496.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0
@@ -533,7 +708,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [832, 260.0]
+    coordinate: [832, 380.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0_0
@@ -572,7 +747,7 @@ blocks:
     label10: Signal 10
     label2: High pass
     label3: difference
-    label4: Signal 4
+    label4: Differnce over threshold
     label5: Signal 5
     label6: Signal 6
     label7: Signal 7
@@ -590,7 +765,7 @@ blocks:
     marker8: '-1'
     marker9: '-1'
     name: High and Low pass signals
-    nconnections: '3'
+    nconnections: '4'
     size: '1024'
     srate: samp_rate
     stemplot: 'False'
@@ -630,9 +805,106 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1392, 608.0]
+    coordinate: [1432, 904.0]
     rotation: 0
     state: true
+- name: qtgui_time_sink_x_1
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: 3,1,1,1
+    label1: Decoded bitstream
+    label10: Signal 10
+    label2: Signal 2
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '""'
+    nconnections: '1'
+    size: '128'
+    srate: baud_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: float
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1.1'
+    ymin: '-0.1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [776, 1116.0]
+    rotation: 0
+    state: enabled
 - name: qtgui_waterfall_sink_x_0
   id: qtgui_waterfall_sink_x
   parameters:
@@ -691,7 +963,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [832, 32.0]
+    coordinate: [832, 128.0]
     rotation: 0
     state: true
 - name: qtgui_waterfall_sink_x_1
@@ -752,7 +1024,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [832, 144.0]
+    coordinate: [832, 256.0]
     rotation: 0
     state: true
 
@@ -763,21 +1035,28 @@ connections:
 - [analog_nbfm_rx_0, '0', qtgui_waterfall_sink_x_1, '0']
 - [band_pass_filter_0, '0', high_pass_filter_0, '0']
 - [band_pass_filter_0, '0', low_pass_filter_0_0, '0']
-- [blocks_abs_xx_0, '0', blocks_file_sink_0_0, '0']
 - [blocks_abs_xx_0, '0', blocks_sub_xx_0, '0']
 - [blocks_abs_xx_0, '0', qtgui_time_sink_x_0_0, '0']
-- [blocks_abs_xx_0_0, '0', blocks_file_sink_0_0_0, '0']
 - [blocks_abs_xx_0_0, '0', blocks_sub_xx_0, '1']
 - [blocks_abs_xx_0_0, '0', qtgui_time_sink_x_0_0, '1']
+- [blocks_char_to_float_0, '0', qtgui_time_sink_x_1, '0']
 - [blocks_file_source_0, '0', analog_nbfm_rx_0, '0']
 - [blocks_file_source_0, '0', qtgui_waterfall_sink_x_0, '0']
 - [blocks_sub_xx_0, '0', low_pass_filter_0_0_0, '0']
 - [blocks_throttle_0, '0', band_pass_filter_0, '0']
+- [epy_block_0, '0', epy_block_1, '0']
+- [epy_block_0, '0', qtgui_time_sink_x_0_0, '3']
+- [epy_block_1, '0', blocks_char_to_float_0, '0']
+- [epy_block_1, '0', blocks_file_sink_1, '0']
+- [epy_block_1, '0', epy_block_2, '0']
+- [epy_block_2, aprs_msg, blocks_message_debug_0, print]
+- [epy_block_2, aprs_msg, qtgui_edit_box_msg_0, val]
 - [high_pass_filter_0, '0', blocks_abs_xx_0_0, '0']
 - [high_pass_filter_0, '0', qtgui_freq_sink_x_0, '2']
 - [low_pass_filter_0_0, '0', blocks_abs_xx_0, '0']
 - [low_pass_filter_0_0, '0', qtgui_freq_sink_x_0, '1']
 - [low_pass_filter_0_0_0, '0', blocks_file_sink_0, '0']
+- [low_pass_filter_0_0_0, '0', epy_block_0, '0']
 - [low_pass_filter_0_0_0, '0', qtgui_time_sink_x_0_0, '2']
 
 metadata:
